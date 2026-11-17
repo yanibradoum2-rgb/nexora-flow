@@ -1,1 +1,202 @@
 
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#17132b">
+<title>Nexora Flow</title>
+<style>
+:root{--bg:#f6f5fa;--dark:#17132b;--purple:#7452d6;--muted:#77748a;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--dark)}
+header{background:var(--dark);color:white;padding:25px 20px 30px;border-radius:0 0 25px 25px}
+.brand{font-size:22px;font-weight:800;letter-spacing:1px}
+.brand span{color:#b69aff}
+header p{color:#c8c3d8;font-size:13px}
+.balance{margin-top:25px;font-size:13px;color:#d2cde0}
+.amount{font-size:32px;font-weight:800;margin-top:7px}
+main{padding:20px;max-width:650px;margin:auto}
+h2{font-size:18px;margin:24px 0 13px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:white;padding:16px;border-radius:16px;box-shadow:0 3px 15px #17132b0a}
+.card small{color:var(--muted)}
+.value{font-size:20px;font-weight:800;margin-top:9px}
+.purple{color:var(--purple)}
+nav{display:flex;gap:8px;overflow:auto;padding-bottom:5px}
+nav button{white-space:nowrap;border:0;padding:11px 15px;border-radius:12px;background:#eae7f2;color:var(--dark);font-weight:600}
+nav button.active{background:var(--purple);color:white}
+.panel{background:white;padding:18px;border-radius:18px;margin-top:15px}
+input,select{width:100%;padding:13px;margin:7px 0 13px;border:1px solid #e2dfeb;border-radius:11px;font-size:15px;background:white}
+label{font-size:13px;font-weight:600}
+.primary{background:var(--purple);color:white;border:0;padding:14px;border-radius:12px;width:100%;font-weight:700;font-size:15px}
+.item{padding:13px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.item:last-child{border:0}
+.muted{color:var(--muted);font-size:12px}
+.empty{color:var(--muted);text-align:center;padding:20px 5px;font-size:13px}
+.section{display:none}
+.section.active{display:block}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">NEXORA <span>FLOW</span></div>
+  <p>La gestion de votre commerce simplifiée.</p>
+  <div class="balance">Ventes encaissées aujourd'hui</div>
+  <div class="amount" id="today">0 FCFA</div>
+</header>
+
+<main>
+  <h2>Vue d'ensemble</h2>
+  <div class="stats">
+    <div class="card"><small>Ventes totales</small><div class="value purple" id="sales">0 F</div></div>
+    <div class="card"><small>Dépenses</small><div class="value" id="expenses">0 F</div></div>
+    <div class="card"><small>Produits</small><div class="value" id="products">0</div></div>
+    <div class="card"><small>Stock faible</small><div class="value" id="low">0</div></div>
+  </div>
+
+  <h2>Gestion du commerce</h2>
+  <nav>
+    <button class="active" onclick="show('home',this)">Accueil</button>
+    <button onclick="show('sale',this)">Ventes</button>
+    <button onclick="show('stock',this)">Produits</button>
+    <button onclick="show('expense',this)">Dépenses</button>
+  </nav>
+
+  <section id="home" class="section active">
+    <div class="panel">
+      <h3>Activité récente</h3>
+      <div id="recent" class="empty">Aucune activité pour le moment.</div>
+    </div>
+  </section>
+
+  <section id="sale" class="section">
+    <div class="panel">
+      <h3>Enregistrer une vente</h3>
+      <label>Produit</label>
+      <select id="saleProduct"></select>
+      <label>Quantité vendue</label>
+      <input id="saleQty" type="number" min="1" value="1">
+      <label>Moyen de paiement</label>
+      <select id="payment">
+        <option>Wave</option>
+        <option>Orange Money</option>
+        <option>Espèces</option>
+      </select>
+      <button class="primary" onclick="addSale()">Enregistrer la vente</button>
+    </div>
+  </section>
+
+  <section id="stock" class="section">
+    <div class="panel">
+      <h3>Ajouter un produit</h3>
+      <label>Nom du produit</label>
+      <input id="productName" placeholder="Ex : Chaussures">
+      <label>Prix de vente (FCFA)</label>
+      <input id="productPrice" type="number" min="1" placeholder="5000">
+      <label>Coût d'achat unitaire (FCFA)</label>
+      <input id="productCost" type="number" min="0" placeholder="3000">
+      <label>Quantité en stock</label>
+      <input id="productQty" type="number" min="0" placeholder="10">
+      <button class="primary" onclick="addProduct()">Ajouter le produit</button>
+    </div>
+    <div class="panel">
+      <h3>Mon inventaire</h3>
+      <div id="inventory" class="empty">Aucun produit enregistré.</div>
+    </div>
+  </section>
+
+  <section id="expense" class="section">
+    <div class="panel">
+      <h3>Nouvelle dépense</h3>
+      <label>Description</label>
+      <input id="expenseName" placeholder="Ex : Transport">
+      <label>Montant (FCFA)</label>
+      <input id="expenseAmount" type="number" min="1" placeholder="2000">
+      <button class="primary" onclick="addExpense()">Enregistrer la dépense</button>
+    </div>
+  </section>
+</main>
+
+<footer>NEXORA FLOW · Version prototype 1.0</footer>
+
+<script>
+const key="nexora_flow_demo_v1";
+let data=JSON.parse(localStorage.getItem(key)||'{"products":[],"sales":[],"expenses":[]}');
+
+function save(){
+ localStorage.setItem(key,JSON.stringify(data));
+ render();
+}
+function money(n){
+ return new Intl.NumberFormat("fr-FR").format(n)+" FCFA";
+}
+function show(id,btn){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+ btn.classList.add("active");
+}
+function addProduct(){
+ const name=document.getElementById("productName").value.trim();
+ const price=Number(document.getElementById("productPrice").value);
+ const cost=Number(document.getElementById("productCost").value);
+ const qty=Number(document.getElementById("productQty").value);
+ if(!name||price<=0||cost<0||!Number.isInteger(qty)||qty<0){alert("Vérifiez les informations du produit.");return;}
+ data.products.push({id:Date.now(),name,price,cost,qty});
+ ["productName","productPrice","productCost","productQty"].forEach(id=>document.getElementById(id).value="");
+ save();
+ alert("Produit ajouté !");
+}
+function addSale(){
+ const id=Number(document.getElementById("saleProduct").value);
+ const product=data.products.find(p=>p.id===id);
+ const qty=Number(document.getElementById("saleQty").value);
+ if(!product||!Number.isInteger(qty)||qty<1){alert("Sélectionnez un produit et une quantité valide.");return;}
+ if(qty>product.qty){alert("Stock insuffisant.");return;}
+ product.qty-=qty;
+ data.sales.push({name:product.name,qty,total:product.price*qty,cost:product.cost*qty,payment:document.getElementById("payment").value,date:new Date().toISOString()});
+ save();
+ alert("Vente enregistrée !");
+}
+function addExpense(){
+ const name=document.getElementById("expenseName").value.trim();
+ const amount=Number(document.getElementById("expenseAmount").value);
+ if(!name||amount<=0){alert("Vérifiez la dépense.");return;}
+ data.expenses.push({name,amount,date:new Date().toISOString()});
+ document.getElementById("expenseName").value="";
+ document.getElementById("expenseAmount").value="";
+ save();
+ alert("Dépense enregistrée !");
+}
+function render(){
+ const total=data.sales.reduce((s,x)=>s+x.total,0);
+ const expenses=data.expenses.reduce((s,x)=>s+x.amount,0);
+ const today=new Date().toDateString();
+ const daily=data.sales.filter(x=>new Date(x.date).toDateString()===today).reduce((s,x)=>s+x.total,0);
+ document.getElementById("today").textContent=money(daily);
+ document.getElementById("sales").textContent=money(total);
+ document.getElementById("expenses").textContent=money(expenses);
+ document.getElementById("products").textContent=data.products.length;
+ document.getElementById("low").textContent=data.products.filter(p=>p.qty<=3).length;
+ const select=document.getElementById("saleProduct");
+ select.innerHTML='<option value="">Choisir un produit</option>';
+ data.products.forEach(p=>select.innerHTML+=`<option value="${p.id}">${escapeHTML(p.name)} · ${money(p.price)} · Stock ${p.qty}</option>`);
+ const inv=document.getElementById("inventory");
+ inv.innerHTML=data.products.length?data.products.map(p=>`<div class="item"><span><b>${escapeHTML(p.name)}</b><br><span class="muted">Stock : ${p.qty} · Achat : ${money(p.cost)}</span></span><b>${money(p.price)}</b></div>`).join(""):'<div class="empty">Aucun produit enregistré.</div>';
+ const recent=document.getElementById("recent");
+ const items=[
+ ...data.sales.map(x=>({text:"Vente : "+x.name+" ("+x.payment+")",amount:x.total,date:x.date})),
+ ...data.expenses.map(x=>({text:"Dépense : "+x.name,amount:-x.amount,date:x.date}))
+ ].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
+ recent.innerHTML=items.length?items.map(x=>`<div class="item"><span>${escapeHTML(x.text)}<br><span class="muted">${new Date(x.date).toLocaleString("fr-FR")}</span></span><b>${x.amount<0?"−":"+"}${money(Math.abs(x.amount))}</b></div>`).join(""):'<div class="empty">Aucune activité pour le moment.</div>';
+}
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+render();
+</script>
+</body>
+</html>
+
