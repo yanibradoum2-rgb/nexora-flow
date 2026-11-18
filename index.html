@@ -40,12 +40,28 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
 </style>
 </<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>head>
 <body>
+
+<section id="authBox" style="position:fixed;inset:0;z-index:9999;background:#f6f5fa;padding:25px;overflow:auto;">
+  <h2>Bienvenue sur Nexora Flow</h2>
+  <p>Connectez-vous ou créez votre compte.</p>
+
+  <input id="authEmail" type="email" placeholder="Adresse e-mail">
+  <input id="authPassword" type="password" placeholder="Mot de passe">
+
+  <button id="signupBtn" type="button">Créer un compte</button>
+  <button id="loginBtn" type="button">Se connecter</button>
+
+  <p id="authMessage"></p>
+</section>
+
 <header>
 <div class="brand">NEXORA <span>FLOW</span></div>
 <p>La gestion de votre commerce simplifiée.</p>
 <div class="balance">Ventes encaissées aujourd'hui</div>
 <div class="amount" id="today">0 FCFA</div>
 </header>
+
+
 
 <main>
 <h2>Vue d'ensemble</h2>
@@ -304,5 +320,59 @@ const SUPABASE_KEY = "sb_publishable_gvA9aVdGwOGyGvxD-qWeQQ_0UpPhJSh";
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
-);<script</body>
+);
+</script>
+<script>
+const authBox = document.getElementById("authBox");
+const authMessage = document.getElementById("authMessage");
+
+function updateAuth(session) {
+  document.body.classList.toggle("logged-in", !!session);
+  authBox.style.display = session ? "none" : "block";
+}
+
+document.getElementById("signupBtn").addEventListener("click", async () => {
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+
+  if (!email || password.length < 6) {
+    authMessage.textContent = "Entre un e-mail et un mot de passe d'au moins 6 caractères.";
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email,
+    password
+  });
+
+  authMessage.textContent = error
+    ? error.message
+    : data.session
+      ? "Compte créé avec succès !"
+      : "Compte créé. Vérifie ton e-mail pour confirmer ton inscription.";
+});
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  authMessage.textContent = error
+    ? error.message
+    : "Connexion réussie !";
+});
+
+supabaseClient.auth.getSession().then(({ data }) => {
+  updateAuth(data.session);
+});
+
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  updateAuth(session);
+});
+</script>
+</body>
 </html>
