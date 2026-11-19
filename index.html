@@ -375,5 +375,161 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
   updateAuth(session);
 });
 </script>
+
+<script>
+const migrationButton = document.createElement("button");
+migrationButton.textContent = "Transférer mes données vers le cloud";
+migrationButton.style.cssText =
+  "position:fixed;bottom:20px;left:10%;width:80%;padding:15px;background:#7452d6;color:white;border:0;border-radius:12px;z-index:9998;display:none;";
+
+document.body.appendChild(migrationButton);
+
+supabaseClient.auth.getSession().then(({ data }) => {
+  migrationButton.style.display = data.session ? "block" : "none";
+});
+
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  migrationButton.style.display = session ? "block" : "none";
+});
+
+migrationButton.addEventListener("click", async () => {
+  migrationButton.disabled = true;
+  migrationButton.textContent = "Transfert en cours...";
+
+  try {
+    const { data: authData, error: authError } =
+      await supabaseClient.auth.getUser();
+
+    if (authError || !authData.user) {
+      throw new Error("Connecte-toi à ton compte.");
+    }
+
+    const userId = authData.user.id;
+    const storageKey = "nexora_flow_demo_v1";
+    const oldData = JSON.parse(
+      localStorage.getItem(storageKey) ||
+      '{"products":[],"clients":[],"sales":[],"expenses":[]}'
+    );
+
+    const { data: existing } = await supabaseClient
+      .from("user_data_migrations")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (existing) {
+      throw new Error("Le transfert a déjà été effectué.");
+    }
+
+    const products = oldData.products || [];
+    const clients = oldData.clients || [];
+    const sales = oldData.sales || [];
+    const expenses = oldData.expenses || [];
+
+    const { data: savedProducts, error: productError } =
+      await supabaseClient.from("products").upsert(
+        products.map(p => ({
+          user_id: userId,
+          local_id: String(p.id),
+          name: p.name,
+          price: p.price,
+          cost: p.cost,
+          qty: p.qty
+        })),
+        { onConflict: "user_id,local_id" }
+      ).select("id,local_id");
+
+    if (productError) throw productError;
+
+    const { data: savedClients, error: clientError } =
+      await supabaseClient.from("clients").upsert(
+        clients.map(c => ({
+          user_id: userId,
+          local_id: String(c.id),
+          name: c.name,
+          phone: c.phone
+        })),
+        { onConflict: "user_id,local_id" }
+      ).select("id,local_id");
+
+    if (clientError) throw clientError;
+
+    const productMap = new Map(
+      (savedProducts || []).map(p => [p.local_id, p.id])
+    );
+
+    const clientMap = new Map(
+      (savedClients || []).map(c => [c.local_id, c.id])
+    );
+
+    const { error: salesError } = await supabaseClient
+      .from("sales")
+      .upsert(
+        sales.map(s => {
+          const matchingProducts = products.filter(
+            p => p.name === s.name
+          );
+
+          const productId =
+            matchingProducts.length === 1
+              ? productMap.get(String(matchingProducts[0].id))
+              : null;
+
+          return {
+            user_id: userId,
+            local_id: String(s.id),
+            product_id: productId || null,
+            client_id: s.clientId
+              ? clientMap.get(String(s.clientId)) || null
+              : null,
+            name: s.name,
+            qty: s.qty,
+            total: s.total,
+            cost: s.cost,
+            payment: s.payment,
+            created_at: s.date
+          };
+        }),
+        { onConflict: "user_id,local_id" }
+      );
+
+    if (salesError) throw salesError;
+
+    const { error: expensesError } = await supabaseClient
+      .from("expenses")
+      .upsert(
+        expenses.map((e, i) => ({
+          user_id: userId,
+          local_id: "legacy-" + i + "-" + e.date,
+          name: e.name,
+          amount: e.amount,
+          created_at: e.date
+        })),
+        { onConflict: "user_id,local_id" }
+      );
+
+    if (expensesError) throw expensesError;
+
+    const { error: markerError } = await supabaseClient
+      .from("user_data_migrations")
+      .insert({
+        user_id: userId,
+        migration_key: "legacy_local_data_v1"
+      });
+
+    if (markerError) throw markerError;
+
+    alert("Transfert réussi ! Tes anciennes données sont conservées.");
+
+    migrationButton.textContent = "Transfert terminé !";
+
+  } catch (error) {
+    alert("Transfert non terminé : " + error.message);
+    migrationButton.disabled = false;
+    migrationButton.textContent = "Réessayer le transfert";
+  }
+});
+</script>
+
 </body>
 </html>
