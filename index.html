@@ -206,15 +206,23 @@ if(error) console.log("Supabase produit:",error.message);
 }
 }catch(e){console.log(e);}
 }
-function addClient(){
+async function addClient(){
 const name=document.getElementById("clientName").value.trim();
 const phone=document.getElementById("clientPhone").value.trim();
-if(!name||!phone){alert("Veuillez remplir le nom et le numéro.");return;}
-data.clients.push({id:Date.now(),name,phone});
+if(!name||!phone){alert("Veuillez remplir le nom et le téléphone");return;}
+const localId=Date.now().toString();
+data.clients.push({id:Date.now(),local_id:localId,name,phone});
 document.getElementById("clientName").value="";
 document.getElementById("clientPhone").value="";
 save();
 alert("Client enregistré !");
+try{
+const {data:{user}}=await supabaseClient.auth.getUser();
+if(user){
+const {error}=await supabaseClient.from("clients").insert({user_id:user.id,local_id:localId,name,phone});
+if(error) console.log("Supabase client:",error.message);
+}
+}catch(e){console.log(e);}
 }
 function addSale(){
 const id=Number(document.getElementById("saleProduct").value);
