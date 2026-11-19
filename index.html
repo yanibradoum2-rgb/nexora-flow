@@ -246,15 +246,23 @@ await supabaseClient.from("products").update({qty:product.qty}).eq("user_id",use
 }
 }catch(e){console.log(e);}
 }
-function addExpense(){
+async function addExpense(){
 const name=document.getElementById("expenseName").value.trim();
 const amount=Number(document.getElementById("expenseAmount").value);
-if(!name||amount<=0){alert("Vérifiez la dépense.");return;}
-data.expenses.push({name,amount,date:new Date().toISOString()});
+if(!name||amount<=0){alert("Vérifiez la dépense");return;}
+const localId=Date.now().toString();
+data.expenses.push({id:Date.now(),local_id:localId,name,amount,date:new Date().toISOString()});
 document.getElementById("expenseName").value="";
 document.getElementById("expenseAmount").value="";
 save();
 alert("Dépense enregistrée !");
+try{
+const {data:{user}}=await supabaseClient.auth.getUser();
+if(user){
+const {error}=await supabaseClient.from("expenses").insert({user_id:user.id,local_id:localId,name,amount});
+if(error) console.log("Supabase dépense:",error.message);
+}
+}catch(e){console.log(e);}
 }
 function escapeHTML(s){
 return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
