@@ -187,16 +187,24 @@ document.getElementById(id).classList.add("active");
 document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
 }
-function addProduct(){
+async function addProduct(){
 const name=document.getElementById("productName").value.trim();
 const price=Number(document.getElementById("productPrice").value);
 const cost=Number(document.getElementById("productCost").value);
 const qty=Number(document.getElementById("productQty").value);
-if(!name||price<=0||cost<0||!Number.isInteger(qty)||qty<0){alert("Vérifiez les informations du produit.");return;}
-data.products.push({id:Date.now(),name,price,cost,qty});
+if(!name||price<=0||cost<0||!Number.isInteger(qty)||qty<0){alert("Vérifie les champs");return;}
+const localId=Date.now().toString();
+data.products.push({id:Date.now(),local_id:localId,name,price,cost,qty});
 ["productName","productPrice","productCost","productQty"].forEach(id=>document.getElementById(id).value="");
 save();
 alert("Produit ajouté !");
+try{
+const {data:{user}}=await supabaseClient.auth.getUser();
+if(user){
+const {error}=await supabaseClient.from("products").insert({user_id:user.id,local_id:localId,name,price,cost,qty});
+if(error) console.log("Supabase produit:",error.message);
+}
+}catch(e){console.log(e);}
 }
 function addClient(){
 const name=document.getElementById("clientName").value.trim();
