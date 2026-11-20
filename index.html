@@ -438,6 +438,87 @@ supabaseClient.auth.getSession().then(({ data }) => {
   migrationButton.style.display = data.session ? "block" : "none";
 });
 
+let cloudLoadUserId = null;
+
+async function loadCloudData(session) {
+  if (!session || cloudLoadUserId === session.user.id) return;
+
+  cloudLoadUserId = session.user.id;
+
+  try {
+    const userId = session.user.id;
+
+    const [p, c, s, e] = await Promise.all([
+      supabaseClient.from("products").select("*").eq("user_id", userId),
+      supabaseClient.from("clients").select("*").eq("user_id", userId),
+      supabaseClient.from("sales").select("*").eq("user_id", userId),
+      supabaseClient.from("expenses").select("*").eq("user_id", userId)
+    ]);
+
+    if (p.error || c.error || s.error || e.error) {
+      throw p.error || c.error || s.error || e.error;
+    }
+
+    if (
+      !p.data.length && !c.data.length &&
+      !s.data.length && !e.data.length
+    ) {
+      cloudLoadUserId = null;
+      return;
+    }
+
+    const clients = c.data.map((x, i) => ({
+      id: Number(x.local_id) || Date.now() + i,
+      local_id: x.local_id,
+      name: x.name,
+      phone: x.phone
+    }));
+
+    const products = p.data.map((x, i) => ({
+      id: Number(x.local_id) || Date.now() + i,
+      local_id: x.local_id,
+      name: x.name,
+      price: Number(x.price),
+      cost: Number(x.cost),
+      qty: Number(x.qty)
+    }));
+
+    data = {
+      products,
+      clients,
+      sales: s.data.map((x, i) => ({
+        id: Number(x.local_id) || Date.now() + i,
+        local_id: x.local_id,
+        name: x.name,
+        qty: Number(x.qty),
+        total: Number(x.total),
+        cost: Number(x.cost),
+        payment: x.payment,
+        clientId: clients.find(y => y.id && c.data.find(z =>
+          z.local_id === y.local_id && z.id === x.client_id
+        ))?.id || null,
+        productId: products.find(y =>
+          String(y.local_id) === String(x.product_local_id)
+        )?.id,
+        date: x.created_at
+      })),
+      expenses: e.data.map((x, i) => ({
+        id: Number(x.local_id) || Date.now() + i,
+        local_id: x.local_id,
+        name: x.name,
+        amount: Number(x.amount),
+        date: x.created_at
+      }))
+    };
+
+    save();
+    console.log("Données Nexora chargées depuis le cloud !");
+  } catch (error) {
+    cloudLoadUserId = null;
+    console.log("Erreur chargement cloud :", error);
+  }
+}
+
 supabaseClient.auth.onAuthStateChange((_event, session) => {
   migrationButton.style.display = session ? "block" : "none";
 });
