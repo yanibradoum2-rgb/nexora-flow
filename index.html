@@ -224,27 +224,54 @@ if(error) console.log("Supabase client:",error.message);
 }
 }catch(e){console.log(e);}
 }
-async function addSale(){
-const id=Number(document.getElementById("saleProduct").value);
-const product=data.products.find(p=>p.id===id);
-const qty=Number(document.getElementById("saleQty").value);
-const clientId=Number(document.getElementById("saleClient").value);
-if(!product||!Number.isInteger(qty)||qty<1){alert("Vérifie la vente");return;}
-if(qty>product.qty){alert("Stock insuffisant");return;}
-product.qty-=qty;
-const localId=Date.now().toString();
-const total=product.price*qty;
-data.sales.push({id:Date.now(),local_id:localId,name:product.name,qty,total:total,clientId:clientId,productId:product.id,date:new Date().toISOString()});
-save();
-alert("Vente enregistrée !");
 try{
 const {data:{user}}=await supabaseClient.auth.getUser();
+
 if(user){
-const {error}=await supabaseClient.from("sales").insert({user_id:user.id,local_id:localId,product_local_id:product.local_id||String(product.id),name:product.name,qty:qty,total:total,client_id:clientId||null});
-if(error) console.log("Supabase vente:",error.message);
-await supabaseClient.from("products").update({qty:product.qty}).eq("user_id",user.id).eq("local_id",product.local_id||String(product.id));
+
+let cloudClientId=null;
+
+const selectedClient=data.clients.find(c=>Number(c.id)===clientId);
+
+if(selectedClient && selectedClient.local_id){
+const {data:cloudClient,error:clientError}=await supabaseClient
+.from("clients")
+.select("id")
+.eq("user_id",user.id)
+.eq("local_id",selectedClient.local_id)
+.maybeSingle();
+
+if(clientError) throw clientError;
+
+cloudClientId=cloudClient?.id||null;
 }
-}catch(e){console.log(e);}
+
+const {error}=await supabaseClient.from("sales").insert({
+user_id:user.id,
+local_id:localId,
+product_local_id:product.local_id||String(product.id),
+name:product.name,
+qty:qty,
+total:total,
+cost:product.cost*qty,
+payment:document.getElementById("payment").value,
+client_id:cloudClientId,
+created_at:new Date().toISOString()
+});
+
+if(error) throw error;
+
+const {error:updateError}=await supabaseClient
+.from("products")
+.update({qty:product.qty})
+.eq("user_id",user.id)
+.eq("local_id",product.local_id||String(product.id));
+
+if(updateError) throw updateError;
+
+}
+}catch(e){
+console.log("Erreur synchronisation vente :",e);
 }
 async function addExpense(){
 const name=document.getElementById("expenseName").value.trim();
