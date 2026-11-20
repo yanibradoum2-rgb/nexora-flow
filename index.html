@@ -224,54 +224,96 @@ if(error) console.log("Supabase client:",error.message);
 }
 }catch(e){console.log(e);}
 }
-try{
-const {data:{user}}=await supabaseClient.auth.getUser();
+async function addSale(){
+  const id = Number(document.getElementById("saleProduct").value);
+  const product = data.products.find(p => p.id === id);
+  const qty = Number(document.getElementById("saleQty").value);
+  const clientId = Number(document.getElementById("saleClient").value) || null;
 
-if(user){
+  if (!product || !Number.isInteger(qty) || qty < 1) {
+    alert("Sélectionne un produit et une quantité valide.");
+    return;
+  }
 
-let cloudClientId=null;
+  if (qty > product.qty) {
+    alert("Stock insuffisant.");
+    return;
+  }
 
-const selectedClient=data.clients.find(c=>Number(c.id)===clientId);
+  const localId = Date.now().toString();
+  const total = product.price * qty;
 
-if(selectedClient && selectedClient.local_id){
-const {data:cloudClient,error:clientError}=await supabaseClient
-.from("clients")
-.select("id")
-.eq("user_id",user.id)
-.eq("local_id",selectedClient.local_id)
-.maybeSingle();
+  product.qty -= qty;
 
-if(clientError) throw clientError;
+  data.sales.push({
+    id: Number(localId),
+    local_id: localId,
+    name: product.name,
+    qty,
+    total,
+    cost: product.cost * qty,
+    payment: document.getElementById("payment").value,
+    clientId,
+    productId: product.id,
+    date: new Date().toISOString()
+  });
 
-cloudClientId=cloudClient?.id||null;
-}
+  document.getElementById("saleQty").value = 1;
+  document.getElementById("saleClient").value = "";
 
-const {error}=await supabaseClient.from("sales").insert({
-user_id:user.id,
-local_id:localId,
-product_local_id:product.local_id||String(product.id),
-name:product.name,
-qty:qty,
-total:total,
-cost:product.cost*qty,
-payment:document.getElementById("payment").value,
-client_id:cloudClientId,
-created_at:new Date().toISOString()
-});
+  save();
+  alert("Vente enregistrée !");
 
-if(error) throw error;
+  try {
+    const { data: authData, error: authError } =
+      await supabaseClient.auth.getUser();
 
-const {error:updateError}=await supabaseClient
-.from("products")
-.update({qty:product.qty})
-.eq("user_id",user.id)
-.eq("local_id",product.local_id||String(product.id));
+    if (authError) throw authError;
+    if (!authData.user) return;
 
-if(updateError) throw updateError;
+    const user = authData.user;
+    let cloudClientId = null;
 
-}
-}catch(e){
-console.log("Erreur synchronisation vente :",e);
+    const selectedClient = data.clients.find(c => c.id === clientId);
+
+    if (selectedClient?.local_id) {
+      const { data: cloudClient, error } = await supabaseClient
+        .from("clients")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("local_id", selectedClient.local_id)
+        .maybeSingle();
+
+      if (error) throw error;
+      cloudClientId = cloudClient?.id || null;
+    }
+
+    const { error } = await supabaseClient.from("sales").insert({
+      user_id: user.id,
+      local_id: localId,
+      product_local_id: product.local_id || String(product.id),
+      name: product.name,
+      qty,
+      total,
+      cost: product.cost * qty,
+      payment: document.getElementById("payment").value,
+      client_id: cloudClientId,
+      created_at: new Date().toISOString()
+    });
+
+    if (error) throw error;
+
+    const { error: updateError } = await supabaseClient
+      .from("products")
+      .update({ qty: product.qty })
+      .eq("user_id", user.id)
+      .eq("local_id", product.local_id || String(product.id));
+
+    if (updateError) throw updateError;
+
+  } catch (e) {
+    console.log("Erreur synchronisation vente :", e);
+  }
 }
 async function addExpense(){
 const name=document.getElementById("expenseName").value.trim();
@@ -417,8 +459,16 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
     : "Connexion réussie !";
 });
 
-supabaseClient.auth.getSession().then(({ data }) => {
-  updateAuth(data.session);
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  updateAuth(session);
+
+  migrationButton.style.display = session ? "block" : "none";
+
+  if (session) {
+    setTimeout(() => loadCloudData(session), 0);
+  } else {
+    cloudLoadUserId = null;
+  }
 });
 
 supabaseClient.auth.onAuthStateChange((_event, session) => {
