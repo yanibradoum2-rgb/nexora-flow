@@ -422,17 +422,30 @@ const authMessage = document.getElementById("authMessage");
 function updateAuth(session) {
   document.body.classList.toggle("logged-in", !!session);
   authBox.style.display = session ? "none" : "block";
-}
 
-document.getElementById("signupBtn").addEventListener("click", async () => {
-  const email = document.getElementById("authEmail").value.trim();
-  const password = document.getElementById("authPassword").value;
+  let logoutBtn = document.getElementById("logoutBtn");
 
-  if (!email || password.length < 6) {
-    authMessage.textContent = "Entre un e-mail et un mot de passe d'au moins 6 caractères.";
-    return;
+  if (!logoutBtn) {
+    logoutBtn = document.createElement("button");
+    logoutBtn.id = "logoutBtn";
+    logoutBtn.textContent = "Déconnexion";
+    logoutBtn.style.position = "fixed";
+    logoutBtn.style.top = "15px";
+    logoutBtn.style.right = "15px";
+    logoutBtn.style.zIndex = "9999";
+    document.body.appendChild(logoutBtn);
+
+    logoutBtn.addEventListener("click", async () => {
+      const { error } = await supabaseClient.auth.signOut();
+
+      if (error) {
+        alert("Erreur lors de la déconnexion : " + error.message);
+      }
+    });
   }
 
+  logoutBtn.style.display = session ? "block" : "none";
+}
   const { data, error } = await supabaseClient.auth.signUp({
     email,
     password
