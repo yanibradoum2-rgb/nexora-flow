@@ -64,14 +64,37 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
 
 
 
+
+
 <main>
-<h2>Vue d'ensemble</h2>
-<div class="stats">
-<div class="card"><small>Ventes totales</small><div class="value purple" id="sales">0 F</div></div>
-<div class="card"><small>Dépenses</small><div class="value" id="expenses">0 F</div></div>
-<div class="card"><small>Produits</small><div class="value" id="products">0</div></div>
-<div class="card"><small>Stock faible</small><div class="value" id="low">0</div></div>
-</div>
+  <h2>Vue d'ensemble</h2>
+
+  <div class="stats">
+    <div class="card">
+      <small>💰 Ventes totales</small>
+      <div class="value purple" id="sales">0 F</div>
+      <small>Chiffre d'affaires</small>
+    </div>
+
+    <div class="card">
+      <small>💸 Dépenses</small>
+      <div class="value" id="expenses">0 F</div>
+      <small>Charges enregistrées</small>
+    </div>
+
+    <div class="card">
+      <small>📦 Produits</small>
+      <div class="value" id="products">0</div>
+      <small>Produits enregistrés</small>
+    </div>
+
+    <div class="card">
+      <small>⚠️ Stock faible</small>
+      <div class="value" id="low">0</div>
+      <small>À réapprovisionner</small>
+    </div>
+  </div>
+</main>
 
 <h2>Gestion du commerce</h2>
 <nav>
