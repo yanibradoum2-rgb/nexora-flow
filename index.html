@@ -508,8 +508,7 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
 const migrationButton = document.createElement("button");
 migrationButton.textContent = "Transférer mes données vers le cloud";
 migrationButton.style.cssText =
-  "position:fixed;bottom:20px;left:10%;width:80%;padding:15px;background:#7452d6;color:white;border:0;border-radius:12px;z-index:9998;display:none;";
-
+  "position:static;width:100%;box-sizing:border-box;margin:20px 0;padding:15px;background:#7452d6;color:white;border:0;border-radius:12px;z-index:9998;display:none;";
 document.body.appendChild(migrationButton);
 
 supabaseClient.auth.getSession().then(({ data }) => {
