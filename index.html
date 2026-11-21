@@ -224,10 +224,14 @@ body.dark-theme button {
     <input id="shopPhone" type="tel" placeholder="Votre numéro">
 
     <label>Devise</label>
-    <select id="shopCurrency">
-      <option value="FCFA">FCFA</option>
-    </select>
-
+    
+<select id="shopCurrency">
+  <option value="FCFA">FCFA (XOF)</option>
+  <option value="EUR">Euro (€)</option>
+  <option value="USD">Dollar américain ($)</option>
+  <option value="GBP">Livre sterling (£)</option>
+  <option value="CAD">Dollar canadien ($)</option>
+</select>
     <button class="primary" onclick="saveShopSettings()">
       Enregistrer les paramètres
     </button>
