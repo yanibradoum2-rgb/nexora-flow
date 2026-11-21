@@ -509,6 +509,17 @@ function updateAuth(session) {
     logoutBtn.style.right = "15px";
     logoutBtn.style.zIndex = "9999";
 document.getElementById("settings").appendChild(logoutBtn);
+logoutBtn.style.position = "static";
+logoutBtn.style.display = "block";
+logoutBtn.style.width = "100%";
+logoutBtn.style.padding = "18px";
+logoutBtn.style.marginTop = "15px";
+logoutBtn.style.background = "#dc3545";
+logoutBtn.style.color = "white";
+logoutBtn.style.border = "0";
+logoutBtn.style.borderRadius = "12px";
+logoutBtn.style.fontSize = "18px";
+logoutBtn.style.fontWeight = "700";
     logoutBtn.addEventListener("click", async () => {
       const { error } = await supabaseClient.auth.signOut();
 
