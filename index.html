@@ -504,12 +504,11 @@ function updateAuth(session) {
     logoutBtn = document.createElement("button");
     logoutBtn.id = "logoutBtn";
     logoutBtn.textContent = "Déconnexion";
-    logoutBtn.style.position = "absolute";
+    logoutBtn.style.position = "static";
     logoutBtn.style.top = "15px";
     logoutBtn.style.right = "15px";
     logoutBtn.style.zIndex = "9999";
-    document.body.appendChild(logoutBtn);
-
+document.getElementById("settings").appendChild(logoutBtn);
     logoutBtn.addEventListener("click", async () => {
       const { error } = await supabaseClient.auth.signOut();
 
