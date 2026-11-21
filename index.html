@@ -299,6 +299,30 @@ if(error) console.log("Supabase client:",error.message);
 }
 }catch(e){console.log(e);}
 }
+
+function saveShopSettings() {
+  const shopName = document.getElementById("shopName").value.trim();
+  const shopPhone = document.getElementById("shopPhone").value.trim();
+  const shopCurrency = document.getElementById("shopCurrency").value;
+
+  if (!shopName) {
+    alert("Veuillez saisir le nom du commerce.");
+    return;
+  }
+
+  const settings = {
+    shopName,
+    shopPhone,
+    shopCurrency
+  };
+
+  localStorage.setItem(
+    "nexora_flow_settings_v1",
+    JSON.stringify(settings)
+  );
+
+  alert("Paramètres du commerce enregistrés !");
+}
 async function addSale(){
   const id = Number(document.getElementById("saleProduct").value);
   const product = data.products.find(p => p.id === id);
