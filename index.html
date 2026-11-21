@@ -191,6 +191,56 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
 <div id="clientHistory" class="empty">Sélectionnez un client pour voir ses achats.</div>
 </div>
 </section>
+
+<section id="settings" class="section">
+  <div class="panel">
+    <h3>🏪 Profil du commerce</h3>
+    <label>Nom du commerce</label>
+    <input id="shopName" placeholder="Nom de votre commerce">
+
+    <label>Numéro de téléphone</label>
+    <input id="shopPhone" type="tel" placeholder="Votre numéro">
+
+    <label>Devise</label>
+    <select id="shopCurrency">
+      <option value="FCFA">FCFA</option>
+    </select>
+
+    <button class="primary" onclick="saveShopSettings()">
+      Enregistrer les paramètres
+    </button>
+  </div>
+
+  <div class="panel">
+    <h3>🎨 Apparence</h3>
+    <p>Personnalisation de l'application</p>
+    <button class="primary" onclick="toggleTheme()">
+      Changer de thème
+    </button>
+  </div>
+
+  <div class="panel">
+    <h3>🔔 Notifications</h3>
+    <label>
+      <input type="checkbox" id="lowStockNotifications">
+      Alertes de stock faible
+    </label>
+  </div>
+
+  <div class="panel">
+    <h3>☁️ Synchronisation</h3>
+    <p>Vos données sont synchronisées avec Supabase.</p>
+  </div>
+
+  <div class="panel">
+    <h3>🔐 Sécurité</h3>
+    <button class="primary"
+      style="background:#dc3545"
+      onclick="if(confirm('Voulez-vous vraiment vous déconnecter ?')) document.getElementById('logoutBtn').click()">
+      Déconnexion
+    </button>
+  </div>
+</section>
 </main>
 
 <footer>NEXORA FLOW · Version 1.1</footer>
